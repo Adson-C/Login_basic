@@ -26,4 +26,27 @@ class Usuario(Base):
 engine = create_engine(f"sqlite:///{PATH_TO_DB}")
 Base.metadata.create_all(bind=engine)
 
-    # CRUD =============================================================================
+# CRUD ====================================================================
+def criar_usuarios(
+    nome,
+    senha,
+    email,
+    acesso_gestor = False
+):
+    with Session(bind=engine) as session:
+        user = Usuario(
+            nome = nome,
+            senha = senha,
+            email = email,
+            acesso_gestor = acesso_gestor
+        )
+        session.add(user)
+        session.commit()
+        
+if __name__ == '__main__':
+    criar_usuarios(
+        'John P Sá',
+        senha='admin',
+        email= 'john@example.com',
+        acesso_gestor=True
+        )
