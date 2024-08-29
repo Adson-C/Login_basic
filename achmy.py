@@ -57,6 +57,53 @@ def ler_por_id(id):
         comando_sql = select(Usuario).filter_by(id=id)
         usuario = session.execute(comando_sql).fetchall()
         return usuario[0][0]
+    
+# Update =============================================================================
+def modificar_usuario(
+        id,
+        nome=None,
+        email=None,
+        senha=None,
+        acesso_gestor=None
+        ):
+    with Session(bind=engine) as session:
+        comando_sql = select(Usuario).filter_by(id=id)
+        usuarios = session.execute(comando_sql).fetchall()
+        for usuario in usuarios:
+            if nome:
+                usuario[0].nome = nome
+            if email:
+                usuario[0].email = email
+            if senha:
+                usuario[0].senha = senha
+            if not acesso_gestor is None:
+                usuario[0].acesso_gestor = acesso_gestor
+        session.commit()
+        
+# metodo de modificação update
+def modificar_usuario1(
+        id,
+       **kwargs
+        ):
+    with Session(bind=engine) as session:
+        comando_sql = select(Usuario).filter_by(id=id)
+        usuarios = session.execute(comando_sql).fetchall()
+        for usuario in usuarios:
+            for key, value in kwargs.items():
+                if key == 'senha':
+                    usuario[0].define_senha(value)
+                else:
+                    setattr(usuario[0], key, value)
+        session.commit()
+        
+# Delete =============================================================================
+def deletar_usuarios(id):
+    with Session(bind=engine) as session:
+        comando_sql = select(Usuario).filter_by(id=id)
+        usuarios = session.execute(comando_sql).fetchall()
+        for usuario in usuarios:
+            session.delete(usuario[0])
+        session.commit()
         
 if __name__ == '__main__':
     # criar_usuarios(
@@ -71,6 +118,9 @@ if __name__ == '__main__':
     # print(usuario_0)
     # print(usuario_0.nome, usuario_0.email, usuario_0.senha)
     
-    usuario_1 = ler_por_id(id=3)
-    print(usuario_1)
-    print(usuario_1.nome, usuario_1.email, usuario_1.senha)
+    # usuario_1 = ler_por_id(id=3)
+    # print(usuario_1)
+    # print(usuario_1.nome, usuario_1.email, usuario_1.senha)
+    
+    modificar_usuario1(id=2, nome='Abraão Licon')
+    deletar_usuarios(id=2)
