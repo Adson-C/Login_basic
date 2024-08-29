@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlalchemy import create_engine, String, Boolean
+from sqlalchemy import create_engine, String, Boolean, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 
 # Criar uma tabela de usuários
@@ -31,22 +31,46 @@ def criar_usuarios(
     nome,
     senha,
     email,
-    acesso_gestor = False
+    **kwargs
 ):
     with Session(bind=engine) as session:
         user = Usuario(
             nome = nome,
             senha = senha,
             email = email,
-            acesso_gestor = acesso_gestor
+            **kwargs
         )
         session.add(user)
         session.commit()
         
+# Leitura =============================================================================
+def ler_todos_usuarios():
+    with Session(bind=engine) as session:
+        comando_sql = select(Usuario)
+        usuarios = session.execute(comando_sql).fetchall()
+        usuarios = [usuario[0] for usuario in usuarios]
+        return usuarios
+    
+# ler por ID do usuario
+def ler_por_id(id):
+    with Session(bind=engine) as session:
+        comando_sql = select(Usuario).filter_by(id=id)
+        usuario = session.execute(comando_sql).fetchall()
+        return usuario[0][0]
+        
 if __name__ == '__main__':
-    criar_usuarios(
-        'John P Sá',
-        senha='admin',
-        email= 'john@example.com',
-        acesso_gestor=True
-        )
+    # criar_usuarios(
+    #     'Gisslle Pimentel',
+    #     senha='admin',
+    #     email= 'adson@example.com',
+    #     # acesso_gestor=True
+    #)
+    
+    # usuarios = ler_todos_usuarios()
+    # usuario_0 = usuarios[0]
+    # print(usuario_0)
+    # print(usuario_0.nome, usuario_0.email, usuario_0.senha)
+    
+    usuario_1 = ler_por_id(id=3)
+    print(usuario_1)
+    print(usuario_1.nome, usuario_1.email, usuario_1.senha)
