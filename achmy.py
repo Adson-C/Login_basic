@@ -3,6 +3,8 @@ from pathlib import Path
 from sqlalchemy import create_engine, String, Boolean, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 
+from werkzeug.security import generate_password_hash, check_password_hash
+
 # Criar uma tabela de usuários
 # =======================================================================
 pasta_atual = Path(__file__).parent
@@ -16,12 +18,20 @@ class Usuario(Base):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     nome: Mapped[str] = mapped_column(String(50))
-    senha: Mapped[str] = mapped_column(String(30))
+    senha: Mapped[str] = mapped_column(String(128))
     email: Mapped[str] = mapped_column(String(50))
     acesso_gestor: Mapped[bool] = mapped_column(Boolean, default=False)
 
     def __repr__(self):
         return f"Usuario: {self.id=} ({self.nome=})"
+    
+    # Cripritografia da senha
+    def define_senha(self, senha):
+        self.senha = generate_password_hash(senha)
+
+    def check_senha(self, senha):
+        return check_password_hash(self.senha, senha)
+    
 
 engine = create_engine(f"sqlite:///{PATH_TO_DB}")
 Base.metadata.create_all(bind=engine)
@@ -36,10 +46,10 @@ def criar_usuarios(
     with Session(bind=engine) as session:
         user = Usuario(
             nome = nome,
-            senha = senha,
             email = email,
             **kwargs
         )
+        user.define_senha(senha)
         session.add(user)
         session.commit()
         
@@ -59,26 +69,26 @@ def ler_por_id(id):
         return usuario[0][0]
     
 # Update =============================================================================
-def modificar_usuario(
-        id,
-        nome=None,
-        email=None,
-        senha=None,
-        acesso_gestor=None
-        ):
-    with Session(bind=engine) as session:
-        comando_sql = select(Usuario).filter_by(id=id)
-        usuarios = session.execute(comando_sql).fetchall()
-        for usuario in usuarios:
-            if nome:
-                usuario[0].nome = nome
-            if email:
-                usuario[0].email = email
-            if senha:
-                usuario[0].senha = senha
-            if not acesso_gestor is None:
-                usuario[0].acesso_gestor = acesso_gestor
-        session.commit()
+# def modificar_usuario(
+#         id,
+#         nome=None,
+#         email=None,
+#         senha=None,
+#         acesso_gestor=None
+#         ):
+#     with Session(bind=engine) as session:
+#         comando_sql = select(Usuario).filter_by(id=id)
+#         usuarios = session.execute(comando_sql).fetchall()
+#         for usuario in usuarios:
+#             if nome:
+#                 usuario[0].nome = nome
+#             if email:
+#                 usuario[0].email = email
+#             if senha:
+#                 usuario[0].senha = senha
+#             if not acesso_gestor is None:
+#                 usuario[0].acesso_gestor = acesso_gestor
+#         session.commit()
         
 # metodo de modificação update
 def modificar_usuario1(
@@ -110,8 +120,8 @@ if __name__ == '__main__':
     #     'Gisslle Pimentel',
     #     senha='admin',
     #     email= 'adson@example.com',
-    #     # acesso_gestor=True
-    #)
+    #     acesso_gestor=True
+    # )
     
     # usuarios = ler_todos_usuarios()
     # usuario_0 = usuarios[0]
@@ -122,5 +132,12 @@ if __name__ == '__main__':
     # print(usuario_1)
     # print(usuario_1.nome, usuario_1.email, usuario_1.senha)
     
-    modificar_usuario1(id=2, nome='Abraão Licon')
-    deletar_usuarios(id=2)
+    # modificar_usuario1(id=2, nome='Abraão Licon')
+    # deletar_usuarios(id=2)
+    
+    criar_usuarios(
+        'Gisslle Pimentel',
+        senha='123456',
+        email= 'gi@example.com',
+        acesso_gestor=True
+    )
